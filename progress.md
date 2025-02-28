@@ -37,3 +37,13 @@ So it worked, I was able to execute commands on the victim machine, and open the
 
 Also, the implant works only as long as it is a running process. 
 
+---
+
+### Feb 28
+My Objective now is to modify the implant in some way to get it onto the Windows machine without Defender noticing. If we can do that, we will then see if we can hit Defender with something to get it to let default implants to slip by.
+
+So far, we are able to transfer the file onto Windows without Defender flagging it as long as it is zipped or using upx.
+
+Modifying the implant: 
+- I attempted to `echo "rndmdata123" >> implant.exe`, *insert reason and what this does*, this did not work.
+- 
