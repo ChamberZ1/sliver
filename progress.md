@@ -7,7 +7,7 @@
 - Persistence: we need a way for the implant to keep running even after reboots or something else that causes it to stop.
 - An implant that reconnects after reboots is essentially a backdoor. C2s relies on implants/backdoors but a backdoor does not necessarily involve a C2.
 - Windows Defender is an AV, not a full EDR system.
-- 
+- For Sliver, there are session implants and beacon implants. Session implants maintain a persistent connection, are ready to go, and are less stealthy. Beacon implants check in periodically, making them the stealthier option.
   
 ---
 
