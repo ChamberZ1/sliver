@@ -46,4 +46,50 @@ So far, we are able to transfer the file onto Windows without Defender flagging 
 
 Modifying the implant: 
 - I attempted to `echo "rndmdata123" >> implant.exe`, *insert reason and what this does*, this did not work.
-- 
+
+### March 4
+Updates:
+I'm going through a bunch of websites and blogs to see how others are doing this. Plan is to use stagers
+
+
+Notes:
+
+$ generate beacon --mtls -e
+Generate beacon implant, using --mtls, -e for including evasion techniques
+GOT FLAGGED
+
+Base64 Encoding:
+$ base64 implant. exe > implant.b64
+> certutil -decode implant.b64 implant.exe
+GOT FLAGGED
+
+Zip Files:
+GOT FLAGGED
+
+Encrypted Zip File:
+DID NOT GET FLAGGED UPON EXTRACTION
+
+FTP:
+Chose not to proceed because it required modifying Firewall settings to allow File Transfer Program to run properly. (See FTP image.png in pictures).
+"I would avoid modifying the Windows Firewall unless absolutely necessary. Any firewall rule changes could leave forensic traces, making detection more likely. Instead, I would use more covert methods to transfer and execute the implant."
+
+---
+
+Stagers and Process injection:
+A stager is a small initial payload that retrieves a larger payload (a Sliver implant) from a remote C2 server. It acts as a first-stage loader that downloads and executes the actual malware. 
+
+Process injection is a technique where malicious code is injected into a legitimate process (like explorer.exe or notepad.exe) so that the implant runs inside the trusted process instead of creating its own malicious-looking process.
+
+Process injection itself won't bypass Windows Defender, but it makes detection harder. Whether Windows Defender catches the Sliver implant depends on how the stager and beacon are delivered and executed.
+
+"Sliver implants provide some basic obfuscation but they are not designed for AV or EDR evasion." https://dominicbreuker.com/post/learning_sliver_c2_06_stagers/
+
+---
+
+Executing in Memory:
+This means running code without writing it to disk. Instead of saving a file like .exe to the system and then running (Disk-based execution), the code is loaded directly into memory (RAM) and executed from there. This is a common evasion technique.
+
+Can be detected by Memory-based monitoring.
+
+Often used with processing injection to evade detection.
+
