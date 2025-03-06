@@ -50,8 +50,11 @@ Modifying the implant:
 ### March 4
 Updates:
 I'm going through a bunch of websites and blogs to see how others are doing this. Plan is to use stagers
-
-
+Installed Metasploit to get SSL cert and key to encrypt the communication between the stager and listener when it is retrieving the implant, so that AV doesn't detect it. 
+I generate a certificate in PEM format using a module by Chris John Riley called impersonate_ssl that will generate one based on the information it gathers from the certificate of a website specified in the RHOST parameter of the module. This makes the cert look legitimate. In the example I follow, they use Google's SSL cert as the base for the fake cert. 
+https://medium.com/@youcef.s.kelouaz/writing-a-sliver-c2-powershell-stager-with-shellcode-compression-and-aes-encryption-9725c0201ea8
+https://www.darkoperator.com/blog/2015/6/14/tip-meterpreter-ssl-certificate-validation
+ 
 Notes:
 
 $ generate beacon --mtls -e
@@ -93,3 +96,11 @@ Can be detected by Memory-based monitoring.
 
 Often used with processing injection to evade detection.
 
+### March 6
+Continuing off from March 4 work:
+Followed the darkoperator article for the most part. Hit some roadblocks due to different metasploit versions operating differently. For example, the example used `use exploit/multi/handler` and `set HANDLERSSLCERT <path to PEM file>`. However, my version did not have `HANDLERSSLCERT`. 
+
+I did some research to learn about why this article is useful.
+Reverse shells using HTTP or HTTPS can be detected easily when security tools inspect traffic. SSL is used to encrypt traffic between target machine and the attacker listener, making it harder for defense systems to inspect payloads. An SSL certificate ensures that only the intended endpoints have access to the traffic (attacker and victim). Impersonated certificates help cloak the traffic as legitimate traffic. However, security tools have improved over the years and this method is not as effective as it once was. 
+
+Using mTLS authenticates both sides for better security. It sort of acts as an assurance for the attacker that it is communicating with the target and not some defense system.
