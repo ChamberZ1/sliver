@@ -8,6 +8,14 @@
 - An implant that reconnects after reboots is essentially a backdoor. C2s relies on implants/backdoors but a backdoor does not necessarily involve a C2.
 - Windows Defender is an AV, not a full EDR system.
 - For Sliver, there are session implants and beacon implants. Session implants maintain a persistent connection, are ready to go, and are less stealthy. Beacon implants check in periodically, making them the stealthier option.
+- Some terminiology:
+- Listener: Used to listen for stager to call back at which point it will send the rest of the payload. https://www.thezentester.com/sliver-c2-staged-implants/
+- Stage Listener: Used to deliever the stager
+- use `jobs` in sliver to see existing listeners
+- Session implant: provides persistent access. Constantly in communication, essentially an active reverse shell.
+- Beacon implant: checks in periodically for new commands, less noisy.
+- Why build a custom payload? The simple answer is if its well known in the offensive space, then its most likely well known in the defensive space as well, including to EDR and AV vendors. Payloads created with default setups will usually be able to be picked up by security solutions almost instantly. An example of this is to create a default msfvenom payload yourself then try to place it on your Windows desktop (or a windows VM if you're using another OS) with Defender ON. https://redheadsec.tech/building-a-simple-custom-implant-for-sliver-shellcode/
+- But normally staged payloads are preferable as it allows for a smaller footprint for AV to hit on when they are loaded on to the system.
   
 ---
 
