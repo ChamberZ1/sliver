@@ -12,6 +12,7 @@
 - Listener: Used to listen for stager to call back at which point it will send the rest of the payload. https://www.thezentester.com/sliver-c2-staged-implants/
 - Stage Listener: Used to deliever the stager
 - use `jobs` in sliver to see existing listeners
+- use `profiles` to see profiles
 - Session implant: provides persistent access. Constantly in communication, essentially an active reverse shell.
 - Beacon implant: checks in periodically for new commands, less noisy.
 - Why build a custom payload? The simple answer is if its well known in the offensive space, then its most likely well known in the defensive space as well, including to EDR and AV vendors. Payloads created with default setups will usually be able to be picked up by security solutions almost instantly. An example of this is to create a default msfvenom payload yourself then try to place it on your Windows desktop (or a windows VM if you're using another OS) with Defender ON. https://redheadsec.tech/building-a-simple-custom-implant-for-sliver-shellcode/
