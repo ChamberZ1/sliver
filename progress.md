@@ -113,3 +113,9 @@ I did some research to learn about why this article is useful.
 Reverse shells using HTTP or HTTPS can be detected easily when security tools inspect traffic. SSL is used to encrypt traffic between target machine and the attacker listener, making it harder for defense systems to inspect payloads. An SSL certificate ensures that only the intended endpoints have access to the traffic (attacker and victim). Impersonated certificates help cloak the traffic as legitimate traffic. However, security tools have improved over the years and this method is not as effective as it once was. 
 
 Using mTLS authenticates both sides for better security. It sort of acts as an assurance for the attacker that it is communicating with the target and not some defense system.
+
+---
+
+### March 16
+Creating a custom c2profile: `sliver > c2profiles generate -f /home/charlitos/sliver/uris.txt -n custom-c2profile -i`. This defines trasnport behavior and how the implant communicates. This is different from `profiles new ...`,  which creates a profile that is used when generating an implant, which dictates how the implant itself shoudl behave.
+
