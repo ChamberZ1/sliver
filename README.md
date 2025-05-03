@@ -1,3 +1,26 @@
+# Sliver (Custom Fork)
+
+This is a **custom fork** of the [BishopFox/Sliver](https://github.com/BishopFox/sliver) C2 framework, modified for a Masters of Engineer project involving evading Microsoft Windows Defender Antivirus with a custom C++ stager.
+
+> This fork is **for educational and research purposes only**. All usage must comply with applicable laws and ethical guidelines.
+
+## Key Modifications
+- Added support for simplified XOR-obfuscated shellcode delivery via custom TCP loader
+- Built a C++ stager that performs in-memory execution via self-injection
+- Implemented dynamic API resolution and removed static imports
+- Rewrote documentation to reflect updated implant testing strategy
+
+## Repository Structure
+- `/scripts_folder` - contains the scripts developed and used in this project.
+- `/notes/` — Implementation notes and experiment logs
+- Everything else follows the standard Sliver layout
+
+## Original Sliver Documentation
+The rest of this document contains the original README from the Sliver project. Please refer to it for information on usage, compilation, and supported features.
+
+---
+
+
 # Sliver
 
 Sliver is an open source cross-platform adversary emulation/red team framework, it can be used by organizations of all sizes to perform security testing. Sliver's implants support C2 over Mutual TLS (mTLS), WireGuard, HTTP(S), and DNS and are dynamically compiled with per-binary asymmetric encryption keys.
