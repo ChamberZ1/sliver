@@ -1,1 +1,3 @@
+# run this in the terminal where your shellcode binary file is. In this case it's "session_implant.bin"
+# this just performs XOR operation on the bytes in the shellcode binary file with 0xAA, and writes it to a file named "session_implant_encoded.bin"
 python3 -c "data = open('session_implant.bin','rb').read(); open('session_implant_encoded.bin','wb').write(bytes([b ^ 0xAA for b in data]))"
