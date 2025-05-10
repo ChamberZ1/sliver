@@ -5,10 +5,8 @@ This is a **custom fork** of the [BishopFox/Sliver](https://github.com/BishopFox
 > This fork is **for educational and research purposes only**. All usage must comply with applicable laws and ethical guidelines.
 
 ## Key Modifications
-- Added support for simplified XOR-obfuscated shellcode delivery via custom TCP loader
-- Built a C++ stager that performs in-memory execution via self-injection
-- Implemented dynamic API resolution and removed static imports
-- Rewrote documentation to reflect updated implant testing strategy
+- Included simple python script which we used to perform XOR-encoding on an implant shellcode file, prepping it for delivery.
+- Built a C++ stager that fetches an XOR-obfuscated implant from the C2 server, dynamically resolves API calls, and performs in-memory execution via self-injection
 
 ## Repository Structure
 - `/scripts_folder` - contains the scripts developed and used in this project.
