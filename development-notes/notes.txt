@@ -1,1 +1,35 @@
+# Project Notes
 
+- For this project, we assume we already have access to a compromised target.
+- C2 frameworks are used after initial exploitation to maintain access.
+- Focus is on post-exploitation evasion, not initial access.
+- C2 framework is communication framework between attacker and compromised host.
+- Implant: The malware/payload dropped on the target machine.
+- Beacon vs Session Implant:
+  - Beacon: Periodically checks in, more stealthy.
+  - Session: Maintains persistent reverse shell.
+- Stager: Lightweight loader that fetches the full implant.
+- Listener: Server-side process that waits for implants/stagers to connect.
+- An implant must be active for a listener to interact with it and for a session to remain alive.
+- Default payloads are easily detected.
+- Defender AV is NOT the same as a full EDR. It lacks deep behavioral and network telemetry. Endpoint Detection Systems are a lot harder to evade, according to my mentors and the internet. 
+- Persistence (e.g., implant re-running after reboot) = backdoor.
+- Backdoor is not a C2 necessarily, but C2 needs backdoor/implant.
+
+## Sliver
+- open-source
+- one of the most used C2 frameworks currently due to its features and accessibility
+
+## Useful commands
+- `jobs` – View active listeners
+- `profiles` – View implant profiles
+- `generate` – Create payload
+- `mtls` – generate mutual TLS listener, by default uses port 443 if it has the permissions 
+- 'sessions' - View active sessions
+
+
+
+## References
+- [Dominic Breuker - In-depth Guide on Sliver and Custom Stager](https://dominicbreuker.com/post/learning_sliver_c2_01_installation/#series-overview)
+- [RedHeadSec - Custom Implant](https://redheadsec.tech/building-a-simple-custom-implant-for-sliver-shellcode/)
+- [TheZenTester - Sliver Staged Implants](https://www.thezentester.com/sliver-c2-staged-implants/)
