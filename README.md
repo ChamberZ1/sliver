@@ -10,7 +10,7 @@ This is a **custom fork** of the [BishopFox/Sliver](https://github.com/BishopFox
 
 ## Repository Structure
 - `/scripts_folder` - contains the scripts developed and used in this project.
-- `/notes/` — Implementation notes and experiment logs
+- `/development-notes/` — Implementation notes and experiment logs
 - Everything else follows the standard Sliver layout
 
 ## Original Sliver Documentation
