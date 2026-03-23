@@ -9,6 +9,8 @@ This is a **custom fork** of the [BishopFox/Sliver](https://github.com/BishopFox
 - Built a C++ stager that fetches an XOR-obfuscated implant from the C2 server, dynamically resolves API calls, and performs in-memory execution via self-injection
 
 ## Repository Structure
+- See [video demo here](https://youtu.be/_OZIggZVAuw)
+- See [report here](Evading_Windows_Defender_Antivirus_with_a_Custom_Sliver_Stager.pdf)
 - `/scripts_folder` - contains the scripts developed and used in this project.
 - `/development-notes/` — Implementation notes and experiment logs
 - Everything else follows the standard Sliver layout
