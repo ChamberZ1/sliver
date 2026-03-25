@@ -14,7 +14,7 @@ This is a **custom fork** of the [BishopFox/Sliver](https://github.com/BishopFox
 ## Repository Structure
 - `/scripts_folder` - Contains the scripts developed and used in this project.
 - `/development-notes/` — Implementation notes and experiment logs
-- '/Evading_Windows_Defender_Antivirus_with_a_Custom_Sliver_Stager.pdf' - Project report.
+- `/Evading_Windows_Defender_Antivirus_with_a_Custom_Sliver_Stager.pdf` - Project report.
 - Everything else follows the standard Sliver layout
 
 ## Original Sliver Documentation
