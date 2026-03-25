@@ -4,15 +4,17 @@ This is a **custom fork** of the [BishopFox/Sliver](https://github.com/BishopFox
 
 > This fork is **for educational and research purposes only**. All usage must comply with applicable laws and ethical guidelines.
 
+## Documentation
+- See [video demo here](https://youtu.be/_OZIggZVAuw)
+- See [report here](Evading_Windows_Defender_Antivirus_with_a_Custom_Sliver_Stager.pdf)
+  
 ## Key Modifications
-- Included simple python script which we used to perform XOR-encoding on an implant shellcode file, prepping it for delivery.
 - Built a C++ stager that fetches an XOR-obfuscated implant from the C2 server, dynamically resolves API calls, and performs in-memory execution via self-injection
 
 ## Repository Structure
-- See [video demo here](https://youtu.be/_OZIggZVAuw)
-- See [report here](Evading_Windows_Defender_Antivirus_with_a_Custom_Sliver_Stager.pdf)
-- `/scripts_folder` - contains the scripts developed and used in this project.
+- `/scripts_folder` - Contains the scripts developed and used in this project.
 - `/development-notes/` — Implementation notes and experiment logs
+- '/Evading_Windows_Defender_Antivirus_with_a_Custom_Sliver_Stager.pdf' - Project report.
 - Everything else follows the standard Sliver layout
 
 ## Original Sliver Documentation
